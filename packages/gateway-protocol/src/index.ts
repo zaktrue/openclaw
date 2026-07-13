@@ -618,6 +618,10 @@ import {
   type SessionFileRelevance,
   SessionFileRelevanceSchema,
   type SessionOperationEvent,
+  type SessionPlacement,
+  SessionPlacementSchema,
+  type SessionPlacementState,
+  SessionPlacementStateSchema,
   type SessionWorktreeInfo,
   SessionWorktreeInfoSchema,
   type SessionsCreateParams,
@@ -628,6 +632,10 @@ import {
   SessionsDeleteParamsSchema,
   type SessionsDescribeParams,
   SessionsDescribeParamsSchema,
+  type SessionsDispatchParams,
+  SessionsDispatchParamsSchema,
+  type SessionsDispatchResult,
+  SessionsDispatchResultSchema,
   type SessionGroup,
   SessionGroupSchema,
   type SessionsGroupsDeleteParams,
@@ -1212,6 +1220,12 @@ export const validateSessionsDiffParams = lazyCompile<SessionsDiffParams>(Sessio
 export const validateSessionsCreateParams = lazyCompile<SessionsCreateParams>(
   SessionsCreateParamsSchema,
 );
+export const validateSessionsDispatchParams = lazyCompile<SessionsDispatchParams>(
+  SessionsDispatchParamsSchema,
+);
+export const validateSessionsDispatchResult = lazyCompile<SessionsDispatchResult>(
+  SessionsDispatchResultSchema,
+);
 export const validateSessionsSendParams = lazyCompile<SessionsSendParams>(SessionsSendParamsSchema);
 export const validateSessionsMessagesSubscribeParams = lazyCompile<SessionsMessagesSubscribeParams>(
   SessionsMessagesSubscribeParamsSchema,
@@ -1761,9 +1775,13 @@ export {
   SessionsCompactionGetParamsSchema,
   SessionsCompactionBranchParamsSchema,
   SessionsCompactionRestoreParamsSchema,
+  SessionPlacementStateSchema,
+  SessionPlacementSchema,
   SessionWorktreeInfoSchema,
   SessionsCreateParamsSchema,
   SessionsCreateResultSchema,
+  SessionsDispatchParamsSchema,
+  SessionsDispatchResultSchema,
   SessionsSendParamsSchema,
   SessionsAbortParamsSchema,
   SessionsPatchParamsSchema,
@@ -2300,7 +2318,11 @@ export type {
   SessionsDescribeParams,
   SessionsResolveParams,
   SessionOperationEvent,
+  SessionPlacementState,
+  SessionPlacement,
   SessionWorktreeInfo,
+  SessionsDispatchParams,
+  SessionsDispatchResult,
   SessionsCreateResult,
   SessionsPatchParams,
   SessionsPatchResult,

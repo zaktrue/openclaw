@@ -60,6 +60,33 @@ export const WorkerAdmissionHandshakeSchema = Type.Object(
   { additionalProperties: false },
 );
 
+const WorkerConnectAdmissionCommonProperties = {
+  environmentId: WorkerIdentifierSchema,
+  credential: WorkerCredentialSchema,
+  ownerEpoch: Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+  rpcSetVersion: Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
+  handshake: WorkerAdmissionHandshakeSchema,
+};
+
+const WorkerConnectAdmissionSchema = Type.Union([
+  Type.Object(
+    {
+      ...WorkerConnectAdmissionCommonProperties,
+      sessionId: Type.Null(),
+      runId: Type.Null(),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...WorkerConnectAdmissionCommonProperties,
+      sessionId: WorkerIdentifierSchema,
+      runId: WorkerIdentifierSchema,
+    },
+    { additionalProperties: false },
+  ),
+]);
+
 /** Dedicated first-frame payload accepted only on the worker ingress. */
 export const WorkerConnectParamsSchema = Type.Object(
   {
@@ -75,17 +102,7 @@ export const WorkerConnectParamsSchema = Type.Object(
       { additionalProperties: false },
     ),
     role: Type.Literal("worker"),
-    admission: Type.Object(
-      {
-        environmentId: WorkerIdentifierSchema,
-        credential: WorkerCredentialSchema,
-        sessionId: Type.Union([WorkerIdentifierSchema, Type.Null()]),
-        ownerEpoch: Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
-        rpcSetVersion: Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
-        handshake: WorkerAdmissionHandshakeSchema,
-      },
-      { additionalProperties: false },
-    ),
+    admission: WorkerConnectAdmissionSchema,
   },
   { additionalProperties: false },
 );
@@ -108,6 +125,7 @@ export const WorkerAdmissionFailureReasonSchema = Type.Union([
   Type.Literal("bundle-mismatch"),
   Type.Literal("version-mismatch"),
   Type.Literal("session-mismatch"),
+  Type.Literal("placement-mismatch"),
   Type.Literal("owner-epoch-mismatch"),
   Type.Literal("rpc-set-mismatch"),
   Type.Literal("protocol-features-mismatch"),
