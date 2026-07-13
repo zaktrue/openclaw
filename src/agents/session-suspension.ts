@@ -49,9 +49,13 @@ type SessionSuspensionRuntimeState = {
       activeCount: number;
     }
   >;
-  suspensionWriteChain: Promise<void>;
+  suspensionWriteChain?: Promise<void>;
   cleanupGeneration: number;
   cleanupActive: boolean;
+};
+
+type InitializedSessionSuspensionRuntimeState = SessionSuspensionRuntimeState & {
+  suspensionWriteChain: Promise<void>;
 };
 
 /**
@@ -60,7 +64,7 @@ type SessionSuspensionRuntimeState = {
  */
 const SESSION_SUSPENSION_STATE_KEY = Symbol.for("openclaw.sessionSuspensionRuntimeState");
 
-function getSessionSuspensionState(): SessionSuspensionRuntimeState {
+function getSessionSuspensionState(): InitializedSessionSuspensionRuntimeState {
   const state = resolveGlobalSingleton<SessionSuspensionRuntimeState>(
     SESSION_SUSPENSION_STATE_KEY,
     () => ({
@@ -94,10 +98,10 @@ function getSessionSuspensionState(): SessionSuspensionRuntimeState {
       }
     >();
   }
-  if (!state.suspensionWriteChain) {
+  if (state.suspensionWriteChain === undefined) {
     state.suspensionWriteChain = Promise.resolve();
   }
-  return state;
+  return state as InitializedSessionSuspensionRuntimeState;
 }
 
 const deferredSessionSuspension = new AsyncLocalStorage<{
@@ -135,14 +139,16 @@ function resolveLaneResumeConcurrency(cfg: OpenClawConfig | undefined, laneId: s
   }
 }
 
+const GATEWAY_MANAGED_LANE_IDS = new Set<string>([
+  CommandLane.Main,
+  CommandLane.Subagent,
+  CommandLane.Cron,
+  CommandLane.CronNested,
+  CommandLane.Nested,
+]);
+
 function isGatewayManagedLane(laneId: string): boolean {
-  return (
-    laneId === CommandLane.Main ||
-    laneId === CommandLane.Subagent ||
-    laneId === CommandLane.Cron ||
-    laneId === CommandLane.CronNested ||
-    laneId === CommandLane.Nested
-  );
+  return GATEWAY_MANAGED_LANE_IDS.has(laneId);
 }
 
 export function resolveSessionSuspensionReason(reason: FailoverReason): SessionSuspensionReason {
@@ -324,7 +330,7 @@ async function suspendSessionQueued(params: SessionSuspensionParams, queuedGener
       resolveLaneResumeConcurrency(params.cfg, params.laneId),
     );
   };
-  let persistedSuspension = false;
+  let persistedSuspension: boolean;
 
   try {
     const patchedEntry = await patchSessionEntry(
