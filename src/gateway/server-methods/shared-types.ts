@@ -37,6 +37,8 @@ import type { DedupeEntry } from "../server-shared.js";
 import type { GatewayEventLoopHealth } from "../server/event-loop-health.js";
 import type { TerminalLaunchResolution } from "../terminal/launch.js";
 import type { TerminalSessionManager } from "../terminal/session-manager.js";
+import type { WorkerPlacementDispatchService } from "../worker-environments/placement-dispatch.js";
+import type { WorkerSessionPlacementReader } from "../worker-environments/placement-projector.js";
 import type { WorkerEnvironmentServiceContract } from "../worker-environments/service-contract.js";
 
 /**
@@ -139,6 +141,10 @@ export type GatewayRequestContext = {
   nodeRegistry: NodeRegistry;
   /** Durable cloud-worker lifecycle; absent from lightweight in-process contexts. */
   workerEnvironmentService?: WorkerEnvironmentServiceContract;
+  /** Durable per-session worker placement; absent when cloud workers are disabled. */
+  workerSessionPlacementService?: WorkerSessionPlacementReader;
+  /** One-way local-to-worker dispatch; absent when cloud workers are disabled. */
+  workerPlacementDispatchService?: Pick<WorkerPlacementDispatchService, "dispatch">;
   // Operator terminal session store. Absent in local/in-process contexts where
   // no PTY surface is served.
   terminalSessions?: TerminalSessionManager;
