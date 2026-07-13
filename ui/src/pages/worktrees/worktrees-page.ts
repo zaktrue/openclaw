@@ -34,7 +34,9 @@ function repoName(repoRoot: string): string {
 
 type CleanupLimitKey = "maxCount" | "maxTotalSizeGb";
 
-const CLEANUP_COMMIT_DELAY_MS = 600;
+// Coalesces bursts of stepper clicks into one config.patch and keeps sustained
+// editing far below the control-plane config-write quota (3 writes / 60 s).
+const CLEANUP_COMMIT_DELAY_MS = 2_000;
 
 // The count is an integer, but the size limit accepts fractions (0.5 GB), so
 // only maxCount gets floored; flooring the size would display 0.5 as the
@@ -179,21 +181,24 @@ class WorktreesPage extends OpenClawLightDomElement {
   }
 
   /**
-   * Cancels the debounce timer and commits pending cleanup edits now,
-   * including a commit that is already in flight. Returns false when any
-   * commit failed or was dropped, so callers can refuse to act on limits
-   * that never reached the gateway.
+   * Cancels the debounce timer and commits pending cleanup edits now. A failed
+   * in-flight commit re-queues its draft, so the serialized retry below still
+   * reports false and callers refuse to act on limits that never saved.
    */
   private async flushCleanupEdits(): Promise<boolean> {
     if (this.cleanupCommitTimer) {
       clearTimeout(this.cleanupCommitTimer);
       this.cleanupCommitTimer = null;
     }
-    const inFlight = this.cleanupCommitInFlight ? await this.cleanupCommitInFlight : true;
-    return (await this.commitCleanupLimits()) && inFlight;
+    return await this.commitCleanupLimits();
   }
 
   private async commitCleanupLimits(): Promise<boolean> {
+    // Serialize config writes: starting while another commit is in flight
+    // would reuse its stale base hash and could land limits out of order.
+    while (this.cleanupCommitInFlight) {
+      await this.cleanupCommitInFlight;
+    }
     const patch = this.pendingCleanupPatch;
     if (Object.keys(patch).length === 0) {
       return true;

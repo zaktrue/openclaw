@@ -563,7 +563,7 @@ describe("WorktreesPage lifecycle", () => {
       expect(page.cleanupMaxSizeGb).toBe(49);
       expect(runtimeConfig.patch).not.toHaveBeenCalled();
 
-      await vi.advanceTimersByTimeAsync(700);
+      await vi.advanceTimersByTimeAsync(2_100);
 
       expect(runtimeConfig.patch).toHaveBeenCalledOnce();
       expect(runtimeConfig.patch).toHaveBeenCalledWith({
@@ -627,7 +627,7 @@ describe("WorktreesPage lifecycle", () => {
       page.setCleanupLimit("maxCount", 30);
       // The debounced save fails first; the draft must stay dirty so a later
       // Clean up now retries the save instead of running with stale limits.
-      await vi.advanceTimersByTimeAsync(700);
+      await vi.advanceTimersByTimeAsync(2_100);
       expect(runtimeConfig.patch).toHaveBeenCalledTimes(1);
 
       await page.gc();
@@ -661,7 +661,7 @@ describe("WorktreesPage lifecycle", () => {
         replacementConfig,
       );
       page.requestUpdate();
-      await vi.advanceTimersByTimeAsync(700);
+      await vi.advanceTimersByTimeAsync(2_100);
 
       expect(originalConfig.patch).not.toHaveBeenCalled();
       expect(replacementConfig.patch).not.toHaveBeenCalled();
@@ -692,7 +692,7 @@ describe("WorktreesPage lifecycle", () => {
       page.setCleanupLimit("maxCount", -5);
       expect(page.cleanupMaxCount).toBe(0);
 
-      await vi.advanceTimersByTimeAsync(700);
+      await vi.advanceTimersByTimeAsync(2_100);
       expect(runtimeConfig.patch).toHaveBeenCalledWith({
         raw: { worktrees: { cleanup: { maxCount: 0, maxTotalSizeGb: 0.5 } } },
         note: "worktrees: update cleanup limits",
